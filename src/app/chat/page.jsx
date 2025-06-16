@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
 const socket = io("https://chat-backend-2qm3.onrender.com"); // 백엔드 서버 주소
@@ -9,6 +9,8 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
+  const chatBoxRef = useRef(null); // ✅ 채팅박스 ref
+
   useEffect(() => {
     socket.on("chat message", (msg) => {
       setMessages((prev) => [...prev, msg]);
@@ -16,6 +18,13 @@ export default function ChatPage() {
 
     return () => socket.off("chat message");
   }, []);
+
+  // ✅ 새 메시지 생기면 자동 스크롤 아래로
+  useEffect(() => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const sendMessage = () => {
     if (!message.trim()) return;
@@ -34,6 +43,7 @@ export default function ChatPage() {
         style={{ marginBottom: 10 }}
       />
       <div
+        ref={chatBoxRef} // ✅ 여기 연결됨
         style={{
           border: "1px solid gray",
           padding: 10,
