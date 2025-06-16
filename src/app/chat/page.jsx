@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3001"); // 백엔드 서버 주소
+const socket = io("https://chat-backend-2qm3.onrender.com"); // 백엔드 서버 주소
 
 export default function ChatPage() {
   const [nickname, setNickname] = useState("익명");
