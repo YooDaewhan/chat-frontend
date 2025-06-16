@@ -1,30 +1,37 @@
 "use client";
-import { useEffect, useState, useRef } from "react"; // useRef import 추가
+import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("https://chat-backend-2qm3.onrender.com"); // 백엔드 서버 주소
+const socket = io("https://chat-backend-2qm3.onrender.com");
 
 export default function ChatPage() {
   const [nickname, setNickname] = useState("익명");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [userCount, setUserCount] = useState(0); // 접속자 수 상태
 
-  const messagesEndRef = useRef(null); // 메시지 div의 참조를 위한 useRef 생성
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     socket.on("chat message", (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
 
-    return () => socket.off("chat message");
+    socket.on("user count", (count) => {
+      setUserCount(count);
+    });
+
+    return () => {
+      socket.off("chat message");
+      socket.off("user count");
+    };
   }, []);
 
-  // 메시지가 업데이트될 때마다 스크롤을 맨 아래로 내리는 useEffect
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
     }
-  }, [messages]); // messages 배열이 변경될 때마다 실행
+  }, [messages]);
 
   const sendMessage = () => {
     if (!message.trim()) return;
@@ -36,6 +43,8 @@ export default function ChatPage() {
   return (
     <div style={{ padding: 20 }}>
       <h1>🗨️ 실시간 채팅</h1>
+      <p>👥 현재 접속자 수: {userCount}명</p>
+
       <input
         placeholder="닉네임"
         value={nickname}
@@ -43,7 +52,7 @@ export default function ChatPage() {
         style={{ marginBottom: 10 }}
       />
       <div
-        ref={messagesEndRef} // useRef로 생성한 참조를 여기에 연결
+        ref={messagesEndRef}
         style={{
           border: "1px solid gray",
           padding: 10,
