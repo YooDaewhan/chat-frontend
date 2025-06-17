@@ -179,7 +179,7 @@ export default function QuizPage() {
                       borderRadius: 4,
                     }}
                   >
-                    킥
+                    강퇴
                   </button>
                   <button
                     onClick={() => socket.emit("delegate host", user.nickname)}
@@ -204,6 +204,7 @@ export default function QuizPage() {
         placeholder="닉네임"
         value={nickname}
         onChange={handleNicknameChange}
+        maxLength={8}
         style={{ marginRight: 10 }}
       />
       <label>
@@ -220,12 +221,14 @@ export default function QuizPage() {
         <div style={{ marginTop: 10, marginBottom: 10 }}>
           <input
             placeholder="문제 입력"
+            maxLength={50}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             style={{ marginRight: 5 }}
           />
           <input
             placeholder="정답 입력"
+            maxLength={50}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             style={{ marginRight: 5 }}
