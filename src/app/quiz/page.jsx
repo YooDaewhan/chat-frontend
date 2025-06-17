@@ -1,3 +1,4 @@
+// ✅ ChatPage.jsx (프론트 전체 코드)
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -14,14 +15,13 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [userCount, setUserCount] = useState(0);
   const [userList, setUserList] = useState([]);
-
-  // 퀴즈 관련
+  const [isHost, setIsHost] = useState(false);
   const [quizQuestion, setQuizQuestion] = useState("");
   const [quizAnswer, setQuizAnswer] = useState("");
+  const [leaderboard, setLeaderboard] = useState([]);
 
   const messagesEndRef = useRef(null);
 
-  // 소켓 이벤트 설정
   useEffect(() => {
     socket.on("connect", () => {
       socket.emit("set nickname", { nickname, color });
@@ -29,17 +29,6 @@ export default function ChatPage() {
 
     socket.on("chat message", (data) => {
       setMessages((prev) => [...prev, data]);
-    });
-
-    socket.on("quiz correct", ({ nickname, color }) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          nickname: "✅ 정답",
-          color,
-          message: `${nickname}님이 정답을 맞췄습니다!`,
-        },
-      ]);
     });
 
     socket.on("user count", (count) => {
@@ -50,23 +39,58 @@ export default function ChatPage() {
       setUserList(list);
     });
 
+    socket.on("host status", ({ isHost }) => {
+      setIsHost(isHost);
+    });
+
+    socket.on("quiz correct", ({ nickname, color, question }) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          nickname: "🎉 정답자",
+          color,
+          message: `${nickname}님이 정답을 맞췄습니다! (${question})`,
+        },
+      ]);
+    });
+
+    socket.on("quiz leaderboard", (ranks) => {
+      setLeaderboard(ranks);
+    });
+
+    socket.on("kick", () => {
+      alert("🚫 방장에 의해 강퇴당했습니다.");
+      socket.disconnect();
+    });
+
+    socket.on("banned", (msg) => {
+      alert("🚫 차단됨: " + msg);
+    });
+
     return () => {
-      socket.off("connect");
       socket.off("chat message");
-      socket.off("quiz correct");
       socket.off("user count");
       socket.off("user list");
+      socket.off("host status");
+      socket.off("quiz correct");
+      socket.off("quiz leaderboard");
+      socket.off("kick");
+      socket.off("banned");
     };
   }, []);
 
-  // 스크롤 자동 이동
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // 문제 출제
+  const sendMessage = () => {
+    if (!message.trim()) return;
+    socket.emit("chat message", message);
+    setMessage("");
+  };
+
   const submitQuiz = () => {
     if (!quizQuestion.trim() || !quizAnswer.trim()) return;
     socket.emit("quiz new", {
@@ -77,14 +101,6 @@ export default function ChatPage() {
     setQuizAnswer("");
   };
 
-  // 메시지 전송
-  const sendMessage = () => {
-    if (!message.trim()) return;
-    socket.emit("chat message", message);
-    setMessage("");
-  };
-
-  // 닉네임/색상 변경 처리
   const handleNicknameChange = (e) => {
     const newNick = e.target.value;
     setNickname(newNick);
@@ -99,58 +115,70 @@ export default function ChatPage() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>🧠 퀴즈 채팅</h1>
+      <h1>🧠 퀴즈 채팅방</h1>
 
-      {/* 문제 출제 영역 */}
-      <div style={{ marginBottom: 20 }}>
-        <h3>문제 출제</h3>
-        <input
-          placeholder="문제 입력"
-          value={quizQuestion}
-          onChange={(e) => setQuizQuestion(e.target.value)}
-          style={{ marginRight: 10 }}
-        />
-        <input
-          placeholder="정답 입력"
-          value={quizAnswer}
-          onChange={(e) => setQuizAnswer(e.target.value)}
-          style={{ marginRight: 10 }}
-        />
-        <button onClick={submitQuiz}>문제내기</button>
-      </div>
-
-      {/* 접속자 수 및 유저 리스트 */}
       <div style={{ marginBottom: 10 }}>
         <strong>👥 현재 접속자 수: {userCount}명</strong>
         <ul>
           {userList.map((user, i) => (
             <li key={i} style={{ color: user.color }}>
               {user.nickname}
+              {isHost && user.nickname !== nickname && (
+                <button
+                  onClick={() => socket.emit("kick user", user.nickname)}
+                  style={{
+                    marginLeft: 10,
+                    color: "white",
+                    backgroundColor: "red",
+                    border: "none",
+                    borderRadius: 4,
+                  }}
+                >
+                  킥
+                </button>
+              )}
             </li>
           ))}
         </ul>
       </div>
 
-      {/* 닉네임 및 색상 */}
-      <div style={{ marginBottom: 10 }}>
+      <input
+        placeholder="닉네임"
+        value={nickname}
+        onChange={handleNicknameChange}
+        style={{ marginRight: 10 }}
+      />
+      <label>
+        🎨 색상:
         <input
-          placeholder="닉네임"
-          value={nickname}
-          onChange={handleNicknameChange}
-          style={{ marginRight: 10 }}
+          type="color"
+          value={color}
+          onChange={handleColorChange}
+          style={{ marginLeft: 5, marginRight: 10 }}
         />
-        <label>
-          🎨 색상:
-          <input
-            type="color"
-            value={color}
-            onChange={handleColorChange}
-            style={{ marginLeft: 5 }}
-          />
-        </label>
-      </div>
+      </label>
 
-      {/* 채팅 메시지 영역 */}
+      {isHost ? (
+        <div style={{ margin: "10px 0" }}>
+          <h3>문제 출제</h3>
+          <input
+            placeholder="문제"
+            value={quizQuestion}
+            onChange={(e) => setQuizQuestion(e.target.value)}
+            style={{ marginRight: 10 }}
+          />
+          <input
+            placeholder="정답"
+            value={quizAnswer}
+            onChange={(e) => setQuizAnswer(e.target.value)}
+            style={{ marginRight: 10 }}
+          />
+          <button onClick={submitQuiz}>문제내기</button>
+        </div>
+      ) : (
+        <p style={{ color: "#888" }}>🛑 방장만 문제 출제가 가능합니다.</p>
+      )}
+
       <div
         ref={messagesEndRef}
         style={{
@@ -169,7 +197,6 @@ export default function ChatPage() {
         ))}
       </div>
 
-      {/* 채팅 입력 */}
       <input
         placeholder="메시지 입력"
         value={message}
@@ -178,6 +205,29 @@ export default function ChatPage() {
         style={{ marginRight: 10 }}
       />
       <button onClick={sendMessage}>전송</button>
+
+      <div style={{ marginTop: 20 }}>
+        <h3>🏆 정답자 순위표</h3>
+        <ol>
+          {leaderboard.map((entry, i) => (
+            <li
+              key={i}
+              style={{
+                fontWeight: entry.name === nickname ? "bold" : "normal",
+              }}
+            >
+              {entry.rank === 1
+                ? "🥇"
+                : entry.rank === 2
+                ? "🥈"
+                : entry.rank === 3
+                ? "🥉"
+                : ""}{" "}
+              {entry.name} ({entry.score}점)
+            </li>
+          ))}
+        </ol>
+      </div>
     </div>
   );
 }
