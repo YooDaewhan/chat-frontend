@@ -23,6 +23,9 @@ export default function QuizPage() {
   const [hostNickname, setHostNickname] = useState("");
   const [leaderboard, setLeaderboard] = useState([]);
   const [correctMsg, setCorrectMsg] = useState(null);
+  const [activeQuizList, setActiveQuizList] = useState([]);
+  const [now, setNow] = useState(Date.now());
+  const [darkMode, setDarkMode] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -54,13 +57,19 @@ export default function QuizPage() {
       setIsHost(isHost);
     });
 
-    socket.on("quiz correct", ({ nickname, color, question }) => {
-      setCorrectMsg(`${nickname}님이 문제를 맞췄습니다!`);
+    socket.on("quiz correct", ({ nickname, color, answer, questionId }) => {
+      setCorrectMsg(
+        `${nickname}님이 문제${questionId}의 정답 "${answer}" 를 맞췄습니다!`
+      );
       setTimeout(() => setCorrectMsg(null), 5000);
     });
 
     socket.on("quiz leaderboard", (ranks) => {
       setLeaderboard(ranks);
+    });
+
+    socket.on("active quizzes", (list) => {
+      setActiveQuizList(list);
     });
 
     socket.on("kick", () => {
@@ -81,9 +90,17 @@ export default function QuizPage() {
       socket.off("host status");
       socket.off("quiz correct");
       socket.off("quiz leaderboard");
+      socket.off("active quizzes");
       socket.off("kick");
       socket.off("banned");
     };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleNicknameChange = (e) => {
@@ -125,8 +142,21 @@ export default function QuizPage() {
     }
   }, [messages]);
 
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => !prev);
+  };
+
   return (
-    <div style={{ padding: 20 }}>
+    <div
+      style={{
+        padding: 20,
+        backgroundColor: darkMode ? "#222" : "#fff",
+        color: darkMode ? "#fff" : "#000",
+      }}
+    >
+      <button onClick={toggleDarkMode} style={{ float: "right" }}>
+        {darkMode ? "☀️ 라이트 모드" : "🌙 다크 모드"}
+      </button>
       <h1>🧠 퀴즈 채팅</h1>
 
       <div style={{ marginBottom: 10 }}>
@@ -216,6 +246,7 @@ export default function QuizPage() {
           height: 300,
           overflowY: "scroll",
           marginBottom: 10,
+          backgroundColor: darkMode ? "#333" : "#f9f9f9",
         }}
       >
         {messages.map((msg, i) => (
@@ -234,6 +265,20 @@ export default function QuizPage() {
         style={{ marginRight: 10 }}
       />
       <button onClick={sendMessage}>전송</button>
+
+      <hr />
+      <h2>📋 진행 중 문제</h2>
+      <ul>
+        {activeQuizList.map((quiz) => {
+          const timeLeft = Math.max(0, Math.floor((quiz.timeout - now) / 1000));
+          return (
+            <li key={quiz.id}>
+              <strong>[문제{quiz.id}]</strong>: {quiz.question}{" "}
+              <span style={{ color: "gray" }}>({timeLeft}초 남음)</span>
+            </li>
+          );
+        })}
+      </ul>
 
       <hr />
       <h2>🏆 정답자 순위</h2>
