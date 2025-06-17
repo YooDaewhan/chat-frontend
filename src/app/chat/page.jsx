@@ -18,10 +18,11 @@ export default function ChatPage() {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    socket.emit("set nickname", { nickname, color });
-  }, [nickname, color]);
+    // ✅ 소켓 연결된 직후 닉네임/색상 보내기
+    socket.on("connect", () => {
+      socket.emit("set nickname", { nickname, color });
+    });
 
-  useEffect(() => {
     socket.on("chat message", (data) => {
       setMessages((prev) => [...prev, data]);
     });
@@ -38,8 +39,22 @@ export default function ChatPage() {
       socket.off("chat message");
       socket.off("user count");
       socket.off("user list");
+      socket.off("connect");
     };
   }, []);
+
+  // ✅ 닉네임 바꿀 때도 서버에 보내기
+  const handleNicknameChange = (e) => {
+    const newNick = e.target.value;
+    setNickname(newNick);
+    socket.emit("set nickname", { nickname: newNick, color });
+  };
+
+  const handleColorChange = (e) => {
+    const newColor = e.target.value;
+    setColor(newColor);
+    socket.emit("set nickname", { nickname, color: newColor });
+  };
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -71,7 +86,7 @@ export default function ChatPage() {
       <input
         placeholder="닉네임"
         value={nickname}
-        onChange={(e) => setNickname(e.target.value)}
+        onChange={handleNicknameChange}
         style={{ marginRight: 10 }}
       />
       <label>
@@ -79,7 +94,7 @@ export default function ChatPage() {
         <input
           type="color"
           value={color}
-          onChange={(e) => setColor(e.target.value)}
+          onChange={handleColorChange}
           style={{ marginLeft: 5, marginRight: 10 }}
         />
       </label>
