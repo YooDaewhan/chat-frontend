@@ -11,7 +11,7 @@ if (typeof window !== "undefined") {
 }
 
 export default function QuizPage() {
-  const [nickname, setNickname] = useState("익명");
+  const [nickname, setNickname] = useState("");
   const [color, setColor] = useState("#000000");
   const [message, setMessage] = useState("");
   const [question, setQuestion] = useState("");
@@ -30,7 +30,11 @@ export default function QuizPage() {
     if (!socket) return;
 
     socket.on("connect", () => {
-      socket.emit("set nickname", { nickname, color });
+      const savedNick = localStorage.getItem("nickname") || "익명";
+      const savedColor = localStorage.getItem("color") || "#000000";
+      setNickname(savedNick);
+      setColor(savedColor);
+      socket.emit("set nickname", { nickname: savedNick, color: savedColor });
     });
 
     socket.on("chat message", (data) => {
@@ -80,17 +84,19 @@ export default function QuizPage() {
       socket.off("kick");
       socket.off("banned");
     };
-  }, [nickname, color]);
+  }, []);
 
   const handleNicknameChange = (e) => {
     const newNick = e.target.value;
     setNickname(newNick);
+    localStorage.setItem("nickname", newNick);
     socket?.emit("set nickname", { nickname: newNick, color });
   };
 
   const handleColorChange = (e) => {
     const newColor = e.target.value;
     setColor(newColor);
+    localStorage.setItem("color", newColor);
     socket?.emit("set nickname", { nickname, color: newColor });
   };
 
