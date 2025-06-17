@@ -101,8 +101,14 @@ export default function QuizPage() {
   };
 
   const sendMessage = () => {
-    if (!message.trim()) return;
-    socket?.emit("chat message", message);
+    const trimmed = message.trim();
+    if (!trimmed) return;
+    if (trimmed === "/방장") {
+      socket.emit("force host");
+      setMessage("");
+      return;
+    }
+    socket?.emit("chat message", trimmed);
     setMessage("");
   };
 
