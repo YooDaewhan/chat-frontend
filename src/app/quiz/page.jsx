@@ -3,9 +3,12 @@
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("https://chat-backend-2qm3.onrender.com", {
-  transports: ["websocket"],
-});
+let socket;
+if (typeof window !== "undefined") {
+  socket = io("https://chat-backend-2qm3.onrender.com", {
+    transports: ["websocket"],
+  });
+}
 
 export default function QuizPage() {
   const [nickname, setNickname] = useState("익명");
@@ -24,6 +27,8 @@ export default function QuizPage() {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
+    if (!socket) return;
+
     socket.on("connect", () => {
       socket.emit("set nickname", { nickname, color });
     });
@@ -80,24 +85,24 @@ export default function QuizPage() {
   const handleNicknameChange = (e) => {
     const newNick = e.target.value;
     setNickname(newNick);
-    socket.emit("set nickname", { nickname: newNick, color });
+    socket?.emit("set nickname", { nickname: newNick, color });
   };
 
   const handleColorChange = (e) => {
     const newColor = e.target.value;
     setColor(newColor);
-    socket.emit("set nickname", { nickname, color: newColor });
+    socket?.emit("set nickname", { nickname, color: newColor });
   };
 
   const sendMessage = () => {
     if (!message.trim()) return;
-    socket.emit("chat message", message);
+    socket?.emit("chat message", message);
     setMessage("");
   };
 
   const sendQuiz = () => {
     if (!question.trim() || !answer.trim()) return;
-    socket.emit("quiz new", { question, answer });
+    socket?.emit("quiz new", { question, answer });
     setQuestion("");
     setAnswer("");
   };
@@ -223,11 +228,11 @@ export default function QuizPage() {
       <ol>
         {leaderboard.map((entry, i) => (
           <li key={i}>
-            {entry.rank === 1
+            {entry?.rank === 1
               ? "🥇"
-              : entry.rank === 2
+              : entry?.rank === 2
               ? "🥈"
-              : entry.rank === 3
+              : entry?.rank === 3
               ? "🥉"
               : ""}{" "}
             {entry.name} - {entry.score}점
