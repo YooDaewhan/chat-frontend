@@ -120,25 +120,54 @@ export default function ChatPage() {
       <div style={{ marginBottom: 10 }}>
         <strong>👥 현재 접속자 수: {userCount}명</strong>
         <ul>
-          {userList.map((user, i) => (
-            <li key={i} style={{ color: user.color }}>
-              {user.nickname}
-              {isHost && user.nickname !== nickname && (
-                <button
-                  onClick={() => socket.emit("kick user", user.nickname)}
-                  style={{
-                    marginLeft: 10,
-                    color: "white",
-                    backgroundColor: "red",
-                    border: "none",
-                    borderRadius: 4,
-                  }}
-                >
-                  킥
-                </button>
-              )}
-            </li>
-          ))}
+          {userList.map((user, i) => {
+            const isMyself = user.nickname === nickname;
+            const isCurrentHost = isHost && isMyself;
+            const isTargetHost =
+              socket.id === hostId && user.nickname !== nickname;
+
+            const isHostUser =
+              user.nickname ===
+              Object.values(users).find((u, idx) => idx === 0)?.nickname;
+
+            return (
+              <li key={i} style={{ color: user.color }}>
+                {user.nickname}
+                {user.nickname === users[hostId]?.nickname && " 👑"}
+                {isMyself && " (나)"}
+                {isHost && user.nickname !== nickname && (
+                  <>
+                    <button
+                      onClick={() => socket.emit("kick user", user.nickname)}
+                      style={{
+                        marginLeft: 10,
+                        color: "white",
+                        backgroundColor: "red",
+                        border: "none",
+                        borderRadius: 4,
+                      }}
+                    >
+                      킥
+                    </button>
+                    <button
+                      onClick={() =>
+                        socket.emit("delegate host", user.nickname)
+                      }
+                      style={{
+                        marginLeft: 5,
+                        color: "white",
+                        backgroundColor: "blue",
+                        border: "none",
+                        borderRadius: 4,
+                      }}
+                    >
+                      방장 위임
+                    </button>
+                  </>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
 
