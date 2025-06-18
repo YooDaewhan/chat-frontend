@@ -121,22 +121,24 @@ export default function QuizPage() {
     const formData = new FormData();
     formData.append("image", file);
 
-    fetch("https://chat-backend-2qm3.onrender.com", {
+    fetch("https://chat-backend-2qm3.onrender.com/uploads", {
       // <--- 서버 주소 맞게 변경
       method: "POST",
       body: formData,
     })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.url) {
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert("업로드 실패: " + (data.error || res.status));
+        } else if (data.url) {
           socket.emit("chat message", data.url);
         } else {
-          alert("업로드 실패");
+          alert("업로드 실패: 응답에 URL이 없음");
         }
         setUploading(false);
       })
-      .catch(() => {
-        alert("업로드 실패");
+      .catch((err) => {
+        alert("업로드 실패: 네트워크 에러 " + err);
         setUploading(false);
       });
   }
