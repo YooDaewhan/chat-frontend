@@ -267,7 +267,7 @@ export default function QuizPage() {
         <div style={{ marginTop: 10, marginBottom: 10 }}>
           <input
             placeholder="문제 입력"
-            maxLength={250}
+            maxLength={750}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             style={{ marginRight: 5 }}
