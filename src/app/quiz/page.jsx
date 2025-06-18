@@ -328,7 +328,7 @@ export default function QuizPage() {
                 <img
                   src={
                     msg.message.startsWith("/uploads/")
-                      ? "https://chat-backend-2qm3.onrender.com" + msg.message // <--- 서버주소 맞게
+                      ? "https://chat-backend-2qm3.onrender.com" + msg.message
                       : msg.message
                   }
                   alt="이미지"
@@ -356,10 +356,18 @@ export default function QuizPage() {
         style={{ display: "none" }}
         id="image-upload"
       />
-      <label htmlFor="image-upload">
-        <button disabled={uploading} style={{ marginRight: 10 }}>
-          {uploading ? "업로드 중..." : "📷 사진"}
-        </button>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        style={{ display: "none" }}
+        id="image-upload"
+      />
+      <label htmlFor="image-upload" style={{ cursor: "pointer" }}>
+        <span role="img" aria-label="사진" style={{ marginRight: 5 }}>
+          📷
+        </span>
+        사진
       </label>
       {/* ========== 업로드 버튼 끝 ========== */}
 
