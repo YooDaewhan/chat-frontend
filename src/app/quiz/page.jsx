@@ -328,7 +328,7 @@ export default function QuizPage() {
                 <img
                   src={
                     msg.message.startsWith("/uploads/")
-                      ? "http://localhost:3001" + msg.message // <--- 서버주소 맞게
+                      ? "https://chat-backend-2qm3.onrender.com" + msg.message // <--- 서버주소 맞게
                       : msg.message
                   }
                   alt="이미지"
