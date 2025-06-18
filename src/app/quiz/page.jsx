@@ -162,24 +162,38 @@ export default function QuizPage() {
       >
         {messages.map((msg, i) => {
           const user = users[msg.senderId] || {};
-          // 시스템 메시지는 senderId가 "system"
           const isMine = msg.senderId === myId;
+          let nicknameLabel,
+            nicknameColor,
+            fontWeight = "normal";
+
+          // 시스템 메시지 처리
+          if (msg.senderId === "system") {
+            nicknameLabel = "[시스템]";
+            if (msg.message.startsWith("[문제")) {
+              nicknameColor = "#d9534f"; // 빨간색
+              fontWeight = "bold";
+            } else if (msg.message.startsWith("[정답]")) {
+              nicknameColor = "#28a745"; // 초록색
+              fontWeight = "bold";
+            } else {
+              nicknameColor = "#888";
+            }
+          } else {
+            nicknameLabel = user.nickname || "알수없음";
+            nicknameColor = isMine ? "#ffc107" : user.color || "#000";
+            fontWeight = isMine ? "bold" : "normal";
+          }
+
           return (
             <div key={i}>
               <strong
                 style={{
-                  color:
-                    msg.senderId === "system"
-                      ? "#888"
-                      : isMine
-                      ? "#ffc107"
-                      : user.color || "#000",
-                  fontWeight: isMine ? "bold" : "normal",
+                  color: nicknameColor,
+                  fontWeight,
                 }}
               >
-                {msg.senderId === "system"
-                  ? "[시스템]"
-                  : user.nickname || "알수없음"}
+                {nicknameLabel}
               </strong>
               : {msg.message}
             </div>
