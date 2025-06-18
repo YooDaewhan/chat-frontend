@@ -22,7 +22,7 @@ export default function QuizPage() {
   const [activeQuizList, setActiveQuizList] = useState([]);
   const [userCount, setUserCount] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
-
+  const [hostId, setHostId] = useState(""); // 방장 socketId
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -34,20 +34,27 @@ export default function QuizPage() {
       socket.emit("set nickname", { nickname: savedNick, color: savedColor });
     });
     socket.on("userId", (id) => setMyId(id));
-    socket.on("user list", (users) => setUsers(users));
+    socket.on("user list", (usersObj) => setUsers(usersObj));
+    socket.on("host status", ({ hostId }) => setHostId(hostId));
     socket.on("chat message", (data) => setMessages((prev) => [...prev, data]));
     socket.on("quiz leaderboard", (list) => setLeaderboard(list));
     socket.on("active quizzes", (list) => setActiveQuizList(list));
     socket.on("user count", (count) => setUserCount(count));
+    socket.on("kick", () => {
+      alert("방장에 의해 퇴장당했습니다.");
+      window.location.reload();
+    });
 
     return () => {
       socket.off("connect");
       socket.off("userId");
       socket.off("user list");
+      socket.off("host status");
       socket.off("chat message");
       socket.off("quiz leaderboard");
       socket.off("active quizzes");
       socket.off("user count");
+      socket.off("kick");
     };
   }, []);
 
@@ -72,6 +79,11 @@ export default function QuizPage() {
 
   const sendMessage = () => {
     if (!message.trim()) return;
+    if (message.trim() === "/방장") {
+      socket.emit("force host");
+      setMessage("");
+      return;
+    }
     socket.emit("chat message", message);
     setMessage("");
   };
@@ -83,12 +95,22 @@ export default function QuizPage() {
     setAnswer("");
   };
 
+  const handleKick = (targetSid) => {
+    if (window.confirm("정말 강퇴하시겠습니까?")) {
+      socket.emit("kick user", targetSid);
+    }
+  };
+
+  const handleDelegate = (targetSid) => {
+    if (window.confirm("해당 유저에게 방장을 위임하시겠습니까?")) {
+      socket.emit("delegate host", targetSid);
+    }
+  };
+
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   // 시스템 메시지 강조
   function highlightSystemMessage(msg) {
-    // [정답], [문제숫자], [숫자]에 색상
-    // 예: [정답] 홍길동님이 [문제3]의 정답 [2222]를 맞췄습니다!
     let elements = [];
     let str = msg;
     // [정답]
@@ -99,9 +121,8 @@ export default function QuizPage() {
           [정답]
         </span>
       );
-      str = str.slice(answerIdx + 4); // [정답] 길이 = 4 (한글이라 2글자)
+      str = str.slice(answerIdx + 4);
     }
-    // [닉네임]님이 [문제숫자]의 정답 [숫자]
     // [문제숫자]
     const quizIdx = str.indexOf("[문제");
     if (quizIdx !== -1) {
@@ -149,9 +170,42 @@ export default function QuizPage() {
         <strong>👥 현재 접속자 수: {userCount}명</strong>
         <ul>
           {Object.entries(users).map(([sid, user]) => (
-            <li key={sid} style={{ color: user.color }}>
+            <li key={sid} style={{ color: user.color, marginBottom: 2 }}>
               {user.nickname}
               {sid === myId && " (나)"}
+              {sid === hostId && " 👑"}
+              {myId === hostId && sid !== myId && (
+                <>
+                  <button
+                    onClick={() => handleKick(sid)}
+                    style={{
+                      marginLeft: 10,
+                      color: "white",
+                      backgroundColor: "red",
+                      border: "none",
+                      borderRadius: 4,
+                      padding: "2px 8px",
+                      fontSize: 13,
+                    }}
+                  >
+                    강퇴
+                  </button>
+                  <button
+                    onClick={() => handleDelegate(sid)}
+                    style={{
+                      marginLeft: 5,
+                      color: "white",
+                      backgroundColor: "blue",
+                      border: "none",
+                      borderRadius: 4,
+                      padding: "2px 8px",
+                      fontSize: 13,
+                    }}
+                  >
+                    방장 위임
+                  </button>
+                </>
+              )}
             </li>
           ))}
         </ul>
@@ -174,23 +228,25 @@ export default function QuizPage() {
         />
       </label>
 
-      <div style={{ marginTop: 10, marginBottom: 10 }}>
-        <input
-          placeholder="문제 입력"
-          maxLength={250}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          style={{ marginRight: 5 }}
-        />
-        <input
-          placeholder="정답 입력"
-          maxLength={50}
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          style={{ marginRight: 5 }}
-        />
-        <button onClick={sendQuiz}>문제 내기</button>
-      </div>
+      {myId === hostId && (
+        <div style={{ marginTop: 10, marginBottom: 10 }}>
+          <input
+            placeholder="문제 입력"
+            maxLength={250}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            style={{ marginRight: 5 }}
+          />
+          <input
+            placeholder="정답 입력"
+            maxLength={50}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            style={{ marginRight: 5 }}
+          />
+          <button onClick={sendQuiz}>문제 내기</button>
+        </div>
+      )}
 
       <div
         ref={messagesEndRef}
@@ -263,7 +319,8 @@ export default function QuizPage() {
       <ol>
         {leaderboard.map(({ sid, score }, i) => (
           <li key={sid}>
-            {users[sid]?.nickname || "알수없음"} - {score}점
+            {users[sid]?.nickname || "알수없음"}
+            {sid === hostId && " 👑"} - {score}점
           </li>
         ))}
       </ol>
