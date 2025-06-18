@@ -22,7 +22,11 @@ export default function QuizPage() {
   const [activeQuizList, setActiveQuizList] = useState([]);
   const [userCount, setUserCount] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
-  const [hostId, setHostId] = useState(""); // 방장 socketId
+  const [hostId, setHostId] = useState("");
+  // --- 추가
+  const [uploading, setUploading] = useState(false);
+  // --- 추가 끝
+
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -108,6 +112,35 @@ export default function QuizPage() {
   };
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
+
+  // ----------------- 이미지 업로드 부분 추가 시작 -----------------
+  function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    fetch("http://localhost:3001/upload", {
+      // <--- 서버 주소 맞게 변경
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.url) {
+          socket.emit("chat message", data.url);
+        } else {
+          alert("업로드 실패");
+        }
+        setUploading(false);
+      })
+      .catch(() => {
+        alert("업로드 실패");
+        setUploading(false);
+      });
+  }
+  // ----------------- 이미지 업로드 부분 추가 끝 -----------------
 
   // 시스템 메시지 강조
   function highlightSystemMessage(msg) {
@@ -263,6 +296,12 @@ export default function QuizPage() {
           const user = users[msg.senderId] || {};
           const isMine = msg.senderId === myId;
 
+          // 이미지 메시지 구분
+          const isImage =
+            typeof msg.message === "string" &&
+            (msg.message.startsWith("/uploads/") ||
+              msg.message.startsWith("http"));
+
           if (msg.senderId === "system") {
             return (
               <div key={i}>
@@ -282,11 +321,45 @@ export default function QuizPage() {
               >
                 {user.nickname || "알수없음"}
               </strong>
-              : {msg.message}
+              :{" "}
+              {isImage ? (
+                <img
+                  src={
+                    msg.message.startsWith("/uploads/")
+                      ? "http://localhost:3001" + msg.message // <--- 서버주소 맞게
+                      : msg.message
+                  }
+                  alt="이미지"
+                  style={{
+                    maxWidth: 200,
+                    maxHeight: 200,
+                    borderRadius: 8,
+                    margin: "4px 0",
+                    display: "block",
+                  }}
+                />
+              ) : (
+                msg.message
+              )}
             </div>
           );
         })}
       </div>
+
+      {/* ========== 업로드 버튼 및 입력창 ========== */}
+      <input
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        style={{ display: "none" }}
+        id="image-upload"
+      />
+      <label htmlFor="image-upload">
+        <button disabled={uploading} style={{ marginRight: 10 }}>
+          {uploading ? "업로드 중..." : "📷 사진"}
+        </button>
+      </label>
+      {/* ========== 업로드 버튼 끝 ========== */}
 
       <input
         placeholder="메시지 입력"
