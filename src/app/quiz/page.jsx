@@ -85,6 +85,52 @@ export default function QuizPage() {
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
+  // 시스템 메시지 강조
+  function highlightSystemMessage(msg) {
+    // [정답], [문제숫자], [숫자]에 색상
+    // 예: [정답] 홍길동님이 [문제3]의 정답 [2222]를 맞췄습니다!
+    let elements = [];
+    let str = msg;
+    // [정답]
+    const answerIdx = str.indexOf("[정답]");
+    if (answerIdx !== -1) {
+      elements.push(
+        <span key="정답" style={{ color: "#28a745", fontWeight: "bold" }}>
+          [정답]
+        </span>
+      );
+      str = str.slice(answerIdx + 4); // [정답] 길이 = 4 (한글이라 2글자)
+    }
+    // [닉네임]님이 [문제숫자]의 정답 [숫자]
+    // [문제숫자]
+    const quizIdx = str.indexOf("[문제");
+    if (quizIdx !== -1) {
+      elements.push(str.slice(0, quizIdx));
+      const quizEnd = str.indexOf("]", quizIdx);
+      elements.push(
+        <span key="문제" style={{ color: "#d9534f", fontWeight: "bold" }}>
+          {str.slice(quizIdx, quizEnd + 1)}
+        </span>
+      );
+      str = str.slice(quizEnd + 1);
+    }
+    // [숫자] 정답 강조
+    const answerNumIdx = str.indexOf("[");
+    if (answerNumIdx !== -1) {
+      elements.push(str.slice(0, answerNumIdx));
+      const answerNumEnd = str.indexOf("]", answerNumIdx);
+      elements.push(
+        <span key="정답숫자" style={{ color: "#28a745", fontWeight: "bold" }}>
+          {str.slice(answerNumIdx, answerNumEnd + 1)}
+        </span>
+      );
+      elements.push(str.slice(answerNumEnd + 1));
+    } else {
+      elements.push(str);
+    }
+    return elements;
+  }
+
   return (
     <div
       style={{
@@ -106,7 +152,6 @@ export default function QuizPage() {
             <li key={sid} style={{ color: user.color }}>
               {user.nickname}
               {sid === myId && " (나)"}
-              {/* 방장 기능, 강퇴 등도 sid로 구현 가능 */}
             </li>
           ))}
         </ul>
@@ -129,8 +174,6 @@ export default function QuizPage() {
         />
       </label>
 
-      {/* 문제 출제 (방장일 때만) */}
-      {/* 방장 여부는 users[myId] === hostId 등으로 구분해서 제어 */}
       <div style={{ marginTop: 10, marginBottom: 10 }}>
         <input
           placeholder="문제 입력"
@@ -164,22 +207,12 @@ export default function QuizPage() {
           const user = users[msg.senderId] || {};
           const isMine = msg.senderId === myId;
 
-          let content = msg.message;
           if (msg.senderId === "system") {
-            // [정답] -> 초록
-            content = content.replace(
-              /\[정답\]/g,
-              '<span style="color:#28a745;font-weight:bold;">[정답]</span>'
-            );
-            // [문제숫자] -> 빨강
-            content = content.replace(
-              /\[문제\d+\]/g,
-              '<span style="color:#d9534f;font-weight:bold;">$&</span>'
-            );
-            // [숫자/정답] => 예시: [2222]
-            content = content.replace(
-              /\[\d+\]/g,
-              '<span style="color:#28a745;font-weight:bold;">$&</span>'
+            return (
+              <div key={i}>
+                <strong style={{ color: "#888" }}>[시스템]</strong> :{" "}
+                {highlightSystemMessage(msg.message)}
+              </div>
             );
           }
 
@@ -187,25 +220,13 @@ export default function QuizPage() {
             <div key={i}>
               <strong
                 style={{
-                  color:
-                    msg.senderId === "system"
-                      ? "#888"
-                      : isMine
-                      ? "#ffc107"
-                      : user.color || "#000",
+                  color: isMine ? color : user.color || "#000",
                   fontWeight: isMine ? "bold" : "normal",
                 }}
               >
-                {msg.senderId === "system"
-                  ? "[시스템]"
-                  : user.nickname || "알수없음"}
+                {user.nickname || "알수없음"}
               </strong>
-              :{" "}
-              {msg.senderId === "system" ? (
-                <span dangerouslySetInnerHTML={{ __html: content }} />
-              ) : (
-                msg.message
-              )}
+              : {msg.message}
             </div>
           );
         })}
