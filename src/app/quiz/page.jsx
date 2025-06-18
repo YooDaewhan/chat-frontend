@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
@@ -14,24 +13,19 @@ export default function QuizPage() {
   const [nickname, setNickname] = useState("");
   const [color, setColor] = useState("#000000");
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [users, setUsers] = useState({});
+  const [myId, setMyId] = useState("");
+  const [leaderboard, setLeaderboard] = useState([]);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [userCount, setUserCount] = useState(0);
-  const [userList, setUserList] = useState([]);
-  const [isHost, setIsHost] = useState(false);
-  const [hostNickname, setHostNickname] = useState("");
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [correctMsg, setCorrectMsg] = useState(null);
   const [activeQuizList, setActiveQuizList] = useState([]);
-  const [now, setNow] = useState(Date.now());
+  const [userCount, setUserCount] = useState(0);
   const [darkMode, setDarkMode] = useState(false);
 
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    if (!socket) return;
-
     socket.on("connect", () => {
       const savedNick = localStorage.getItem("nickname") || "익명";
       const savedColor = localStorage.getItem("color") || "#000000";
@@ -39,102 +33,23 @@ export default function QuizPage() {
       setColor(savedColor);
       socket.emit("set nickname", { nickname: savedNick, color: savedColor });
     });
-
-    socket.on("chat message", (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
-
-    socket.on("user count", (count) => {
-      setUserCount(count);
-    });
-
-    socket.on("user list", ({ users, hostNickname }) => {
-      setUserList(users);
-      setHostNickname(hostNickname);
-    });
-
-    socket.on("host status", ({ isHost }) => {
-      setIsHost(isHost);
-    });
-
-    socket.on("quiz correct", ({ nickname, color, answer, questionId }) => {
-      setCorrectMsg(
-        `${nickname}님이 문제${questionId}의 정답 "${answer}" 를 맞췄습니다!`
-      );
-      setTimeout(() => setCorrectMsg(null), 5000);
-    });
-
-    socket.on("quiz leaderboard", (ranks) => {
-      setLeaderboard(ranks);
-    });
-
-    socket.on("active quizzes", (list) => {
-      setActiveQuizList(list);
-    });
-
-    socket.on("kick", () => {
-      alert("방장에 의해 퇴장당했습니다.");
-      window.location.reload();
-    });
-
-    socket.on("banned", (msg) => {
-      alert(msg);
-      window.location.reload();
-    });
+    socket.on("userId", (id) => setMyId(id));
+    socket.on("user list", (users) => setUsers(users));
+    socket.on("chat message", (data) => setMessages((prev) => [...prev, data]));
+    socket.on("quiz leaderboard", (list) => setLeaderboard(list));
+    socket.on("active quizzes", (list) => setActiveQuizList(list));
+    socket.on("user count", (count) => setUserCount(count));
 
     return () => {
       socket.off("connect");
-      socket.off("chat message");
-      socket.off("user count");
+      socket.off("userId");
       socket.off("user list");
-      socket.off("host status");
-      socket.off("quiz correct");
+      socket.off("chat message");
       socket.off("quiz leaderboard");
       socket.off("active quizzes");
-      socket.off("kick");
-      socket.off("banned");
+      socket.off("user count");
     };
   }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleNicknameChange = (e) => {
-    const newNick = e.target.value;
-    setNickname(newNick);
-    localStorage.setItem("nickname", newNick);
-    socket?.emit("set nickname", { nickname: newNick, color });
-  };
-
-  const handleColorChange = (e) => {
-    const newColor = e.target.value;
-    setColor(newColor);
-    localStorage.setItem("color", newColor);
-    socket?.emit("set nickname", { nickname, color: newColor });
-  };
-
-  const sendMessage = () => {
-    const trimmed = message.trim();
-    if (!trimmed) return;
-    if (trimmed === "/방장") {
-      socket.emit("force host");
-      setMessage("");
-      return;
-    }
-    socket?.emit("chat message", trimmed);
-    setMessage("");
-  };
-
-  const sendQuiz = () => {
-    if (!question.trim() || !answer.trim()) return;
-    socket?.emit("quiz new", { question, answer });
-    setQuestion("");
-    setAnswer("");
-  };
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -142,9 +57,33 @@ export default function QuizPage() {
     }
   }, [messages]);
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => !prev);
+  const handleNicknameChange = (e) => {
+    const newNick = e.target.value;
+    setNickname(newNick);
+    localStorage.setItem("nickname", newNick);
+    socket.emit("set nickname", { nickname: newNick, color });
   };
+  const handleColorChange = (e) => {
+    const newColor = e.target.value;
+    setColor(newColor);
+    localStorage.setItem("color", newColor);
+    socket.emit("set nickname", { nickname, color: newColor });
+  };
+
+  const sendMessage = () => {
+    if (!message.trim()) return;
+    socket.emit("chat message", message);
+    setMessage("");
+  };
+
+  const sendQuiz = () => {
+    if (!question.trim() || !answer.trim()) return;
+    socket.emit("quiz new", { question, answer });
+    setQuestion("");
+    setAnswer("");
+  };
+
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   return (
     <div
@@ -152,6 +91,7 @@ export default function QuizPage() {
         padding: 20,
         backgroundColor: darkMode ? "#222" : "#fff",
         color: darkMode ? "#fff" : "#000",
+        minHeight: "100vh",
       }}
     >
       <button onClick={toggleDarkMode} style={{ float: "right" }}>
@@ -162,39 +102,11 @@ export default function QuizPage() {
       <div style={{ marginBottom: 10 }}>
         <strong>👥 현재 접속자 수: {userCount}명</strong>
         <ul>
-          {userList.map((user, i) => (
-            <li key={i} style={{ color: user.color }}>
+          {Object.entries(users).map(([sid, user]) => (
+            <li key={sid} style={{ color: user.color }}>
               {user.nickname}
-              {user.nickname === nickname && " (나)"}
-              {user.nickname === hostNickname && " 👑"}
-              {isHost && user.nickname !== nickname && (
-                <>
-                  <button
-                    onClick={() => socket.emit("kick user", user.nickname)}
-                    style={{
-                      marginLeft: 10,
-                      color: "white",
-                      backgroundColor: "red",
-                      border: "none",
-                      borderRadius: 4,
-                    }}
-                  >
-                    강퇴
-                  </button>
-                  <button
-                    onClick={() => socket.emit("delegate host", user.nickname)}
-                    style={{
-                      marginLeft: 5,
-                      color: "white",
-                      backgroundColor: "blue",
-                      border: "none",
-                      borderRadius: 4,
-                    }}
-                  >
-                    방장 위임
-                  </button>
-                </>
-              )}
+              {sid === myId && " (나)"}
+              {/* 방장 기능, 강퇴 등도 sid로 구현 가능 */}
             </li>
           ))}
         </ul>
@@ -217,29 +129,25 @@ export default function QuizPage() {
         />
       </label>
 
-      {isHost && (
-        <div style={{ marginTop: 10, marginBottom: 10 }}>
-          <input
-            placeholder="문제 입력"
-            maxLength={250}
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            style={{ marginRight: 5 }}
-          />
-          <input
-            placeholder="정답 입력"
-            maxLength={50}
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            style={{ marginRight: 5 }}
-          />
-          <button onClick={sendQuiz}>문제 내기</button>
-        </div>
-      )}
-
-      {correctMsg && (
-        <div style={{ color: "green", marginBottom: 10 }}>{correctMsg}</div>
-      )}
+      {/* 문제 출제 (방장일 때만) */}
+      {/* 방장 여부는 users[myId] === hostId 등으로 구분해서 제어 */}
+      <div style={{ marginTop: 10, marginBottom: 10 }}>
+        <input
+          placeholder="문제 입력"
+          maxLength={250}
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          style={{ marginRight: 5 }}
+        />
+        <input
+          placeholder="정답 입력"
+          maxLength={50}
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          style={{ marginRight: 5 }}
+        />
+        <button onClick={sendQuiz}>문제 내기</button>
+      </div>
 
       <div
         ref={messagesEndRef}
@@ -252,12 +160,31 @@ export default function QuizPage() {
           backgroundColor: darkMode ? "#333" : "#f9f9f9",
         }}
       >
-        {messages.map((msg, i) => (
-          <div key={i}>
-            <strong style={{ color: msg.color }}>{msg.nickname}</strong>:{" "}
-            {msg.message}
-          </div>
-        ))}
+        {messages.map((msg, i) => {
+          const user = users[msg.senderId] || {};
+          // 시스템 메시지는 senderId가 "system"
+          const isMine = msg.senderId === myId;
+          return (
+            <div key={i}>
+              <strong
+                style={{
+                  color:
+                    msg.senderId === "system"
+                      ? "#888"
+                      : isMine
+                      ? "#ffc107"
+                      : user.color || "#000",
+                  fontWeight: isMine ? "bold" : "normal",
+                }}
+              >
+                {msg.senderId === "system"
+                  ? "[시스템]"
+                  : user.nickname || "알수없음"}
+              </strong>
+              : {msg.message}
+            </div>
+          );
+        })}
       </div>
 
       <input
@@ -273,7 +200,10 @@ export default function QuizPage() {
       <h2>📋 진행 중 문제</h2>
       <ul>
         {activeQuizList.map((quiz) => {
-          const timeLeft = Math.max(0, Math.floor((quiz.timeout - now) / 1000));
+          const timeLeft = Math.max(
+            0,
+            Math.floor((quiz.timeout - Date.now()) / 1000)
+          );
           return (
             <li key={quiz.id}>
               <strong>[문제{quiz.id}]</strong>: {quiz.question}{" "}
@@ -286,16 +216,9 @@ export default function QuizPage() {
       <hr />
       <h2>🏆 정답자 순위</h2>
       <ol>
-        {leaderboard.map((entry, i) => (
-          <li key={i}>
-            {entry?.rank === 1
-              ? "🥇"
-              : entry?.rank === 2
-              ? "🥈"
-              : entry?.rank === 3
-              ? "🥉"
-              : ""}{" "}
-            {entry.name} - {entry.score}점
+        {leaderboard.map(({ sid, score }, i) => (
+          <li key={sid}>
+            {users[sid]?.nickname || "알수없음"} - {score}점
           </li>
         ))}
       </ol>
