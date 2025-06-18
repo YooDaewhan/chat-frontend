@@ -163,39 +163,49 @@ export default function QuizPage() {
         {messages.map((msg, i) => {
           const user = users[msg.senderId] || {};
           const isMine = msg.senderId === myId;
-          let nicknameLabel,
-            nicknameColor,
-            fontWeight = "normal";
 
-          // 시스템 메시지 처리
+          let content = msg.message;
           if (msg.senderId === "system") {
-            nicknameLabel = "[시스템]";
-            if (msg.message.startsWith("[문제")) {
-              nicknameColor = "#d9534f"; // 빨간색
-              fontWeight = "bold";
-            } else if (msg.message.startsWith("[정답]")) {
-              nicknameColor = "#28a745"; // 초록색
-              fontWeight = "bold";
-            } else {
-              nicknameColor = "#888";
-            }
-          } else {
-            nicknameLabel = user.nickname || "알수없음";
-            nicknameColor = isMine ? "#ffc107" : user.color || "#000";
-            fontWeight = isMine ? "bold" : "normal";
+            // [정답] -> 초록
+            content = content.replace(
+              /\[정답\]/g,
+              '<span style="color:#28a745;font-weight:bold;">[정답]</span>'
+            );
+            // [문제숫자] -> 빨강
+            content = content.replace(
+              /\[문제\d+\]/g,
+              '<span style="color:#d9534f;font-weight:bold;">$&</span>'
+            );
+            // [숫자/정답] => 예시: [2222]
+            content = content.replace(
+              /\[\d+\]/g,
+              '<span style="color:#28a745;font-weight:bold;">$&</span>'
+            );
           }
 
           return (
             <div key={i}>
               <strong
                 style={{
-                  color: nicknameColor,
-                  fontWeight,
+                  color:
+                    msg.senderId === "system"
+                      ? "#888"
+                      : isMine
+                      ? "#ffc107"
+                      : user.color || "#000",
+                  fontWeight: isMine ? "bold" : "normal",
                 }}
               >
-                {nicknameLabel}
+                {msg.senderId === "system"
+                  ? "[시스템]"
+                  : user.nickname || "알수없음"}
               </strong>
-              : {msg.message}
+              :{" "}
+              {msg.senderId === "system" ? (
+                <span dangerouslySetInnerHTML={{ __html: content }} />
+              ) : (
+                msg.message
+              )}
             </div>
           );
         })}
