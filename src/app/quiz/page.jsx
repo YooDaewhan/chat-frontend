@@ -121,7 +121,7 @@ export default function QuizPage() {
     const formData = new FormData();
     formData.append("image", file);
 
-    fetch("http://localhost:3001/upload", {
+    fetch("https://chat-backend-2qm3.onrender.com", {
       // <--- 서버 주소 맞게 변경
       method: "POST",
       body: formData,
