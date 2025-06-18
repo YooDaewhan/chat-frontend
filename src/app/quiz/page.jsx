@@ -282,21 +282,6 @@ export default function QuizPage() {
           <button onClick={sendQuiz}>문제 내기</button>
         </div>
       )}
-      <h2>📋 진행 중 문제</h2>
-      <ul>
-        {activeQuizList.map((quiz) => {
-          const timeLeft = Math.max(
-            0,
-            Math.floor((quiz.timeout - Date.now()) / 1000)
-          );
-          return (
-            <li key={quiz.id}>
-              <strong>[문제{quiz.id}]</strong>: {quiz.question}{" "}
-              <span style={{ color: "gray" }}>({timeLeft}초 남음)</span>
-            </li>
-          );
-        })}
-      </ul>
 
       <div
         ref={messagesEndRef}
@@ -396,6 +381,21 @@ export default function QuizPage() {
       <button onClick={sendMessage}>전송</button>
 
       <hr />
+      <h2>📋 진행 중 문제</h2>
+      <ul>
+        {activeQuizList.map((quiz) => {
+          const timeLeft = Math.max(
+            0,
+            Math.floor((quiz.timeout - Date.now()) / 1000)
+          );
+          return (
+            <li key={quiz.id}>
+              <strong>[문제{quiz.id}]</strong>: {quiz.question}{" "}
+              <span style={{ color: "gray" }}>({timeLeft}초 남음)</span>
+            </li>
+          );
+        })}
+      </ul>
 
       <hr />
       <h2>🏆 정답자 순위</h2>
