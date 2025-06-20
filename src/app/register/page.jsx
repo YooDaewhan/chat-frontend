@@ -1,59 +1,66 @@
-import pool from "@/lib/db";
+"use client";
+import { useState } from "react";
 
-// CORS preflight 요청 대응
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*", // 또는 Vercel 도메인
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-    },
-  });
-}
+export default function RegisterPage() {
+  const [id, setId] = useState("");
+  const [pw, setPw] = useState("");
+  const [message, setMessage] = useState("");
 
-export async function POST(req) {
-  try {
-    const { id, pw } = await req.json();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage("");
 
-    if (!id || !pw) {
-      return new Response("id와 pw는 필수입니다.", {
-        status: 400,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
+    try {
+      const res = await fetch(
+        "http://ec2-13-125-238-80.ap-northeast-2.compute.amazonaws.com:3000/api/register",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, pw }),
+        }
+      );
+
+      if (res.status === 201) {
+        setMessage("✅ 회원가입 성공!");
+        setId("");
+        setPw("");
+      } else {
+        const text = await res.text();
+        setMessage("❌ 실패: " + text);
+      }
+    } catch (err) {
+      setMessage("❌ 서버 오류 발생");
     }
+  };
 
-    // 아이디 중복 체크
-    const [existing] = await pool.query("SELECT id FROM user WHERE id = ?", [
-      id,
-    ]);
-    if (existing.length > 0) {
-      return new Response("이미 존재하는 아이디입니다.", {
-        status: 409,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    }
-
-    // DB 삽입 (평문 저장)
-    await pool.query("INSERT INTO user (id, pw) VALUES (?, ?)", [id, pw]);
-
-    return new Response("회원가입 성공", {
-      status: 201,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-  } catch (err) {
-    console.error("회원가입 오류:", err);
-    return new Response("서버 오류: " + err.message, {
-      status: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-  }
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>회원가입</h1>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          maxWidth: 300,
+          gap: 10,
+        }}
+      >
+        <input
+          placeholder="아이디"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="비밀번호"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          required
+        />
+        <button type="submit">회원가입</button>
+        {message && <div style={{ marginTop: 10 }}>{message}</div>}
+      </form>
+    </div>
+  );
 }
