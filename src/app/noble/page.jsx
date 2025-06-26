@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+const router = useRouter();
 
 export default function NoblePage() {
   const [allMonsters, setAllMonsters] = useState([]);
