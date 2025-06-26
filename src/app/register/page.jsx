@@ -21,13 +21,16 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id, password }),
-      });
+      const res = await fetch(
+        "https://chat-backend-2qm3.onrender.com/api/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id, password }),
+        }
+      );
 
       if (res.ok) {
         setMessage("회원가입 성공!");
@@ -61,8 +64,15 @@ export default function RegisterPage() {
         <input
           type="password"
           placeholder="비밀번호"
-          value={pw}
-          onChange={(e) => setPw(e.target.value)}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="비밀번호 확인"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
         <button type="submit">회원가입</button>
