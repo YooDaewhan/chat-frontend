@@ -51,7 +51,7 @@ export default function MonsterBattlePage() {
         <p>Skill4: {myData.skil4}</p>
       </div>
 
-      {/* VS 표시 */}
+      {/* VS */}
       <h1 style={{ fontSize: "2rem" }}>VS</h1>
 
       {/* 상대 몬스터 */}
