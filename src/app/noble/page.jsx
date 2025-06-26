@@ -8,8 +8,8 @@ export default function NoblePage() {
   const [allMonsters, setAllMonsters] = useState([]);
   const [myMonsters, setMyMonsters] = useState([]);
   const [userId, setUserId] = useState(null);
-  const [selectedEnemyMid, setSelectedEnemyMid] = useState(null);
-  const [selectedMyMid, setSelectedMyMid] = useState(null);
+  const [selectedEnemy, setSelectedEnemy] = useState(null);
+  const [selectedMyMonster, setSelectedMyMonster] = useState(null);
 
   useEffect(() => {
     const storedId = localStorage.getItem("user");
@@ -39,77 +39,186 @@ export default function NoblePage() {
     fetchMyMonsters();
   }, []);
 
-  useEffect(() => {
-    if (selectedEnemyMid && selectedMyMid) {
-      router.push(
-        `/noble/monsterbattle?enemy=${selectedEnemyMid}&my=${selectedMyMid}`
-      );
+  const handleBattle = () => {
+    if (selectedMyMonster && selectedEnemy) {
+      // URL 인코딩 필수
+      const url = `/noble/monsterbattle?myUid=${encodeURIComponent(
+        selectedMyMonster.uid
+      )}&myName=${encodeURIComponent(
+        selectedMyMonster.name
+      )}&enemyUid=${encodeURIComponent(
+        selectedEnemy.uid
+      )}&enemyName=${encodeURIComponent(selectedEnemy.name)}`;
+      router.push(url);
     }
-  }, [selectedEnemyMid, selectedMyMid, router]);
+  };
 
   return (
-    <div style={{ display: "flex", gap: "2rem", padding: "2rem" }}>
-      {/* 전체 몬스터 목록 */}
-      <div
-        style={{
-          flex: 1,
-          background: "white",
-          padding: "1rem",
-          borderRadius: "8px",
-        }}
-      >
-        <h2>전체 몬스터 목록</h2>
-        {allMonsters.map((mon) => (
-          <div key={mon.mid} style={{ marginBottom: "0.5rem" }}>
-            [{mon.mid}] {mon.name}
-            <button
-              style={{ marginLeft: "1rem" }}
-              onClick={() => setSelectedEnemyMid(mon.mid)}
-            >
-              상대 선택
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* 내 몬스터 목록 */}
-      <div
-        style={{
-          flex: 1,
-          background: "white",
-          padding: "1rem",
-          borderRadius: "8px",
-        }}
-      >
-        <h2>내 몬스터 목록</h2>
-
-        {/* ✅ "몬스터 추가하기" 버튼 */}
-        <button
-          onClick={() => router.push("/noble/monstermkr")}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+        padding: "2rem",
+        backgroundColor: "#f3f4f6",
+        minHeight: "100vh",
+      }}
+    >
+      {/* 위쪽 두 박스 (45% 높이) */}
+      <div style={{ display: "flex", gap: "1rem", height: "45%" }}>
+        {/* 전체 몬스터 목록 박스 */}
+        <div
           style={{
-            marginBottom: "1rem",
-            padding: "0.5rem 1rem",
-            backgroundColor: "#10b981",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
+            flex: 1,
+            backgroundColor: "white",
+            border: "1px solid #ccc",
+            borderRadius: "10px",
+            padding: "1rem",
+            overflowY: "auto",
           }}
         >
-          몬스터 추가하기
-        </button>
+          <h2>전체 몬스터 목록</h2>
+          {allMonsters.length > 0 ? (
+            <ul>
+              {allMonsters.map((mon) => (
+                <li key={mon.uid} style={{ marginBottom: "0.5rem" }}>
+                  [{mon.uid}] {mon.name}
+                  <button
+                    onClick={() => setSelectedEnemy(mon)}
+                    style={{
+                      marginLeft: "1rem",
+                      padding: "0.25rem 0.5rem",
+                      backgroundColor: "#f59e0b",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    상대 선택
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>로딩 중...</p>
+          )}
+        </div>
 
-        {myMonsters.map((mon) => (
-          <div key={mon.mid} style={{ marginBottom: "0.5rem" }}>
-            [{mon.mid}] {mon.name}
-            <button
-              style={{ marginLeft: "1rem" }}
-              onClick={() => setSelectedMyMid(mon.mid)}
-            >
-              내 몬스터 선택
-            </button>
+        {/* 내 몬스터 목록 박스 */}
+        <div
+          style={{
+            flex: 1,
+            backgroundColor: "white",
+            border: "1px solid #ccc",
+            borderRadius: "10px",
+            padding: "1rem",
+            overflowY: "auto",
+          }}
+        >
+          <h2>내 몬스터 목록</h2>
+          <button
+            onClick={() => router.push("/noble/monstermkr")}
+            style={{
+              marginBottom: "1rem",
+              padding: "0.5rem 1rem",
+              backgroundColor: "#10b981",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            몬스터 추가하기
+          </button>
+          <ul>
+            {myMonsters.map((mon) => (
+              <li key={mon.uid} style={{ marginBottom: "0.5rem" }}>
+                [{mon.uid}] {mon.name}
+                <button
+                  onClick={() => setSelectedMyMonster(mon)}
+                  style={{
+                    marginLeft: "1rem",
+                    padding: "0.25rem 0.5rem",
+                    backgroundColor: "#4f46e5",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  내 몬스터 선택
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* 아래쪽 선택 결과 박스 */}
+      <div
+        style={{
+          flex: 1,
+          backgroundColor: "white",
+          border: "1px solid #ccc",
+          borderRadius: "10px",
+          padding: "1rem",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+          gap: "2rem",
+        }}
+      >
+        {/* 왼쪽 - 내 몬스터 */}
+        {selectedMyMonster && (
+          <div>
+            <h3>내 몬스터</h3>
+            <p>UID: {selectedMyMonster.uid}</p>
+            <p>Name: {selectedMyMonster.name}</p>
+            <p>mid: {selectedMyMonster.mid}</p>
           </div>
-        ))}
+        )}
+
+        {/* VS 표시는 둘 다 있을 때만 */}
+        {selectedMyMonster && selectedEnemy && (
+          <h1 style={{ fontSize: "2rem" }}>VS</h1>
+        )}
+
+        {/* 오른쪽 - 상대 몬스터 */}
+        {selectedEnemy && (
+          <div>
+            <h3>상대 몬스터</h3>
+            <p>UID: {selectedEnemy.uid}</p>
+            <p>Name: {selectedEnemy.name}</p>
+            <p>mid: {selectedEnemy.mid}</p>
+          </div>
+        )}
+
+        {/* 아무것도 없으면 안내 */}
+        {!selectedMyMonster && !selectedEnemy && <p>몬스터를 선택하세요.</p>}
+      </div>
+
+      {/* 🟢 배틀 버튼: 두 몬스터 모두 선택했을 때만 표시 */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        {selectedMyMonster && selectedEnemy && (
+          <button
+            onClick={handleBattle}
+            style={{
+              marginTop: "1rem",
+              padding: "0.75rem 2rem",
+              backgroundColor: "#e11d48",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "1.1rem",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            배틀 시작
+          </button>
+        )}
       </div>
     </div>
   );
