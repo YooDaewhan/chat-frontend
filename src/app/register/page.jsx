@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 
 export default function RegisterPage() {
@@ -42,39 +41,33 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "400px", margin: "0 auto" }}>
-      <h2>회원가입</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>아이디:</label>
-          <input
-            type="text"
-            value={id}
-            onChange={(e) => setId(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>비밀번호:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>비밀번호 확인:</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
+    <div style={{ padding: 20 }}>
+      <h1>회원가입</h1>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          maxWidth: 300,
+          gap: 10,
+        }}
+      >
+        <input
+          placeholder="아이디"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="비밀번호"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          required
+        />
         <button type="submit">회원가입</button>
+        {message && <div style={{ marginTop: 10 }}>{message}</div>}
       </form>
-      {message && <p>{message}</p>}
     </div>
   );
 }
