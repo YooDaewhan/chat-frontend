@@ -95,6 +95,20 @@ export default function NoblePage() {
         }}
       >
         <h2>내 몬스터 목록</h2>
+        <button
+          onClick={() => router.push("/noble/monstermkr")}
+          style={{
+            marginTop: "1rem",
+            padding: "0.5rem 1rem",
+            backgroundColor: "#10b981",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          몬스터 추가하기
+        </button>
         {myMonsters.length > 0 ? (
           <ul>
             {myMonsters.map((mon) => (
