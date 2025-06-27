@@ -24,7 +24,11 @@ export default function NoblePage() {
         "https://chat-backend-2qm3.onrender.com/api/monsters/all"
       );
       const data = await res.json();
-      setAllMonsters(data);
+      // 내 몬스터 제외
+      const filtered = data.filter(
+        (mon) => String(mon.uid) !== String(storedId)
+      );
+      setAllMonsters(filtered);
     };
 
     const fetchMyMonsters = async () => {
@@ -41,14 +45,9 @@ export default function NoblePage() {
 
   const handleBattle = () => {
     if (selectedMyMonster && selectedEnemy) {
-      // URL 인코딩 필수
-      const url = `/noble/monsterbattle?myUid=${encodeURIComponent(
-        selectedMyMonster.uid
-      )}&myName=${encodeURIComponent(
-        selectedMyMonster.name
-      )}&enemyUid=${encodeURIComponent(
-        selectedEnemy.uid
-      )}&enemyName=${encodeURIComponent(selectedEnemy.name)}`;
+      const url = `/noble/monsterbattle?myMid=${encodeURIComponent(
+        selectedMyMonster.mid
+      )}&enemyMid=${encodeURIComponent(selectedEnemy.mid)}`;
       router.push(url);
     }
   };
@@ -170,7 +169,16 @@ export default function NoblePage() {
           gap: "2rem",
         }}
       >
-        {/* 왼쪽 - 내 몬스터 */}
+        {/* 왼쪽 - 상대 몬스터 */}
+        {selectedEnemy && (
+          <div>
+            <h3>상대 몬스터</h3>
+            <p>UID: {selectedEnemy.uid}</p>
+            <p>Name: {selectedEnemy.name}</p>
+            <p>mid: {selectedEnemy.mid}</p>
+          </div>
+        )}
+        {/* 오른쪽 - 내 몬스터 */}
         {selectedMyMonster && (
           <div>
             <h3>내 몬스터</h3>
@@ -183,16 +191,6 @@ export default function NoblePage() {
         {/* VS 표시는 둘 다 있을 때만 */}
         {selectedMyMonster && selectedEnemy && (
           <h1 style={{ fontSize: "2rem" }}>VS</h1>
-        )}
-
-        {/* 오른쪽 - 상대 몬스터 */}
-        {selectedEnemy && (
-          <div>
-            <h3>상대 몬스터</h3>
-            <p>UID: {selectedEnemy.uid}</p>
-            <p>Name: {selectedEnemy.name}</p>
-            <p>mid: {selectedEnemy.mid}</p>
-          </div>
         )}
 
         {/* 아무것도 없으면 안내 */}

@@ -4,27 +4,24 @@ import { useEffect, useState } from "react";
 
 export default function MonsterBattlePage() {
   const searchParams = useSearchParams();
-  const myUid = searchParams.get("myUid");
-  const myName = searchParams.get("myName");
-  const enemyUid = searchParams.get("enemyUid");
-  const enemyName = searchParams.get("enemyName");
-
+  const myMid = searchParams.get("myMid");
+  const enemyMid = searchParams.get("enemyMid");
   const [myDetail, setMyDetail] = useState(null);
   const [enemyDetail, setEnemyDetail] = useState(null);
   const [battleLog, setBattleLog] = useState("");
   const [loading, setLoading] = useState(true);
   const [storySaved, setStorySaved] = useState(false); // 중복 저장 방지
 
-  // 1. 몬스터 상세정보 조회
+  // 몬스터 상세정보 조회
   useEffect(() => {
-    if (!myUid || !myName || !enemyUid || !enemyName) return;
+    if (!myMid || !enemyMid) return;
 
-    const fetchDetail = async (uid, name, setter) => {
+    const fetchDetail = async (mid, setter) => {
       try {
         const res = await fetch(
-          `https://chat-backend-2qm3.onrender.com/api/monsters/detail?uid=${encodeURIComponent(
-            uid
-          )}&name=${encodeURIComponent(name)}`
+          `https://chat-backend-2qm3.onrender.com/api/monsters/detail?mid=${encodeURIComponent(
+            mid
+          )}`
         );
         const data = await res.json();
         setter(data);
@@ -33,9 +30,9 @@ export default function MonsterBattlePage() {
       }
     };
 
-    fetchDetail(myUid, myName, setMyDetail);
-    fetchDetail(enemyUid, enemyName, setEnemyDetail);
-  }, [myUid, myName, enemyUid, enemyName]);
+    fetchDetail(myMid, setMyDetail);
+    fetchDetail(enemyMid, setEnemyDetail);
+  }, [myMid, enemyMid]);
 
   // 2. 두 몬스터 모두 받아오면 GPT 프록시 호출
   useEffect(() => {
@@ -82,7 +79,7 @@ export default function MonsterBattlePage() {
           );
           setStorySaved(true);
         } catch (err) {
-          // 저장 실패 무시
+          console.error("스토리 저장 실패:", err);
         }
       };
       saveStory();
