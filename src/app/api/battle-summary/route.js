@@ -11,7 +11,7 @@ export async function POST(req) {
   const enemySkill2 = enemy[enemy.skill2] || "";
 
   const prompt = `
-두 몬스터가 가상의 전투를 벌임. 전투 장면을 실시간 중계 형식으로 400자 이내로 묘사. 승패여부 필수.
+가상의 전투를 벌임. 전투 장면을 실시간 중계 형식으로 400자 이내로 묘사. 승패여부 필수. 소개와 스킬 내용 최대한반영.
 
 [몬스터1]
 이름: ${my.name}
