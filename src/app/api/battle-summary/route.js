@@ -11,7 +11,9 @@ export async function POST(req) {
   const enemySkill2 = enemy[enemy.skill2] || "";
 
   const prompt = `
-가상의 전투를 벌임. 전투 장면을 실시간 중계 형식으로 400자 이내로 묘사. 승패여부 필수. 소개와 스킬 내용 최대한반영.
+몬스터가 전투를 벌임. 전투 장면을 중계 형식으로 500자 이내로 묘사. 
+승패여부 필수. 몬스터의 종족과 소개를 통해 제작자의 의도를 이해하고 
+소개와 스킬 내용 최대한 반영.
 
 [몬스터1]
 이름: ${my.name}
@@ -39,7 +41,7 @@ export async function POST(req) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
       }),
