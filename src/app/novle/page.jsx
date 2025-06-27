@@ -18,6 +18,7 @@ export default function novlePage() {
     const storedId = localStorage.getItem("user");
     if (!storedId) {
       alert("로그인이 필요합니다.");
+      router.push("/");
       return;
     }
     setUserId(storedId);
