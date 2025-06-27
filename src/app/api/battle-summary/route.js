@@ -11,7 +11,7 @@ export async function POST(req) {
   const enemySkill2 = enemy[enemy.skill2] || "";
 
   const prompt = `
-두 몬스터가 전투를 벌임.
+두 몬스터가 전투를 벌임
 몬스터의 종족과 소개를 통해 제작자의 의도를 이해해야함. 
 소개와 스킬 내용 최대한 적절하게 반영.
 전투 내용을 500자 이내로 묘사. 전투는 스킬과 종족을이용하여 
