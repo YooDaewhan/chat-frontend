@@ -32,7 +32,7 @@ export default function Home() {
         <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <a href="/quiz">
             <li className="mb-2 tracking-[-.01em]">
-              Get started by quiz & chating{" "}
+              Get started by quiz & 채팅{" "}
               <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
                 src/app/page.js
               </code>
@@ -40,7 +40,9 @@ export default function Home() {
             </li>
           </a>
           <a href="/novle">
-            <li className="tracking-[-.01em]">monster battle party. Go! go!</li>
+            <li className="tracking-[-.01em]">
+              monster battle party. Go! go! (몬스터배틀)
+            </li>
           </a>
         </ol>
 

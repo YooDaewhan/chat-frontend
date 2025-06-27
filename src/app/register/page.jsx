@@ -80,7 +80,6 @@ export default function RegisterPage() {
         >
           회원가입
         </h1>
-
         <input
           placeholder="아이디"
           value={id}
@@ -98,7 +97,6 @@ export default function RegisterPage() {
           onFocus={(e) => (e.target.style.border = "1.5px solid #6366f1")}
           onBlur={(e) => (e.target.style.border = "1px solid #d1d5db")}
         />
-
         <input
           type="password"
           placeholder="비밀번호"
@@ -117,7 +115,6 @@ export default function RegisterPage() {
           onFocus={(e) => (e.target.style.border = "1.5px solid #6366f1")}
           onBlur={(e) => (e.target.style.border = "1px solid #d1d5db")}
         />
-
         <input
           type="password"
           placeholder="비밀번호 확인"
@@ -136,7 +133,7 @@ export default function RegisterPage() {
           onFocus={(e) => (e.target.style.border = "1.5px solid #6366f1")}
           onBlur={(e) => (e.target.style.border = "1px solid #d1d5db")}
         />
-
+        한글아이디 가능 하다능
         <button
           type="submit"
           style={{
@@ -160,7 +157,6 @@ export default function RegisterPage() {
         >
           회원가입
         </button>
-
         {message && (
           <div
             style={{
