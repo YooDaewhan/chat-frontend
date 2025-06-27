@@ -1,5 +1,6 @@
 // components/MonsterBattlePage.jsx
 "use client";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -13,6 +14,7 @@ function getRandomSkills(detail) {
 
 export default function MonsterBattlePage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const myMid = searchParams.get("myMid");
   const enemyMid = searchParams.get("enemyMid");
   const mySkill1 = searchParams.get("mySkill1");
@@ -184,9 +186,35 @@ export default function MonsterBattlePage() {
           marginTop: 24,
           fontFamily: "monospace",
           whiteSpace: "pre-wrap",
+          textAlign: "center",
         }}
       >
-        {loading ? "전투 결과 생성 중..." : battleLog}
+        {loading ? (
+          "전투 결과 생성 중..."
+        ) : (
+          <>
+            {battleLog}
+            <div style={{ marginTop: 24 }}>
+              <button
+                onClick={() => router.push("/novle")}
+                style={{
+                  padding: "0.6rem 2rem",
+                  marginTop: 8,
+                  background: "#6366f1",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "1.1rem",
+                  letterSpacing: 1,
+                }}
+              >
+                돌아가기
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
