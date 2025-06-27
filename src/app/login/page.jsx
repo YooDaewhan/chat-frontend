@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -32,6 +34,7 @@ export default function LoginPage() {
         setMessage("✅ 로그인 성공!");
         localStorage.setItem("user", id);
         setUserId(id);
+        router.push("/");
       } else {
         setMessage(`❌ ${data.error}`);
       }

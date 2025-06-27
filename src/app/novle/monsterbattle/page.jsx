@@ -2,15 +2,27 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+function getRandomSkills(detail) {
+  const skillKeys = ["skil1", "skil2", "skil3", "skil4"].filter(
+    (k) => detail && detail[k]
+  );
+  const shuffled = [...skillKeys].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 2);
+}
+
 export default function MonsterBattlePage() {
   const searchParams = useSearchParams();
   const myMid = searchParams.get("myMid");
   const enemyMid = searchParams.get("enemyMid");
+  const mySkill1 = searchParams.get("mySkill1");
+  const mySkill2 = searchParams.get("mySkill2");
+
   const [myDetail, setMyDetail] = useState(null);
   const [enemyDetail, setEnemyDetail] = useState(null);
   const [battleLog, setBattleLog] = useState("");
   const [loading, setLoading] = useState(true);
-  const [storySaved, setStorySaved] = useState(false); // 중복 저장 방지
+  const [storySaved, setStorySaved] = useState(false);
+  const [enemySkills, setEnemySkills] = useState([]);
 
   // 몬스터 상세정보 조회
   useEffect(() => {
@@ -34,7 +46,12 @@ export default function MonsterBattlePage() {
     fetchDetail(enemyMid, setEnemyDetail);
   }, [myMid, enemyMid]);
 
-  // 2. 두 몬스터 모두 받아오면 GPT 프록시 호출
+  // 상대 스킬 랜덤 선택
+  useEffect(() => {
+    if (enemyDetail) setEnemySkills(getRandomSkills(enemyDetail));
+  }, [enemyDetail]);
+
+  // GPT 호출
   useEffect(() => {
     if (!myDetail || !enemyDetail) return;
     const getBattleLog = async () => {
@@ -55,7 +72,7 @@ export default function MonsterBattlePage() {
     getBattleLog();
   }, [myDetail, enemyDetail]);
 
-  // 3. battleLog가 생성된 뒤 story 저장 (중복 저장 방지용 플래그 포함)
+  // battleLog가 생성된 뒤 story 저장 (중복 저장 방지용 플래그 포함)
   useEffect(() => {
     if (!loading && battleLog && myDetail && enemyDetail && !storySaved) {
       const saveStory = async () => {
@@ -66,7 +83,7 @@ export default function MonsterBattlePage() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                uid: myDetail.uid, // 나의 uid
+                uid: myDetail.uid,
                 storyinfo: JSON.stringify({
                   enemyUid: enemyDetail.uid,
                   enemyName: enemyDetail.name,
@@ -98,39 +115,65 @@ export default function MonsterBattlePage() {
       }}
     >
       <h1 style={{ marginBottom: "2rem" }}>Monster Battle</h1>
-      {/* 두 몬스터 정보 VS로 */}
       <div style={{ display: "flex", gap: "3rem", marginBottom: "2rem" }}>
-        {/* 내 몬스터 */}
+        {/* 내 몬스터: 선택 스킬만 */}
         <div style={{ textAlign: "center", minWidth: 200 }}>
           {myDetail && (
             <>
               <h2>{myDetail.name}</h2>
               <p>종족: {myDetail.kind}</p>
               <p>소개: {myDetail.info}</p>
-              <p>스킬1: {myDetail.skil1}</p>
-              <p>스킬2: {myDetail.skil2}</p>
-              <p>스킬3: {myDetail.skil3}</p>
-              <p>스킬4: {myDetail.skil4}</p>
+              {[mySkill1, mySkill2].filter(Boolean).map(
+                (sk, idx) =>
+                  sk &&
+                  myDetail[sk] && (
+                    <div
+                      key={sk}
+                      style={{
+                        marginBottom: 6,
+                        background: "#eef",
+                        borderRadius: 5,
+                        padding: "2px 10px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      스킬{sk.replace("skil", "")}: {myDetail[sk]}
+                    </div>
+                  )
+              )}
             </>
           )}
         </div>
         <h1 style={{ alignSelf: "center" }}>VS</h1>
-        {/* 상대 몬스터 */}
+        {/* 상대 몬스터: 랜덤 2개 스킬 */}
         <div style={{ textAlign: "center", minWidth: 200 }}>
           {enemyDetail && (
             <>
               <h2>{enemyDetail.name}</h2>
               <p>종족: {enemyDetail.kind}</p>
               <p>소개: {enemyDetail.info}</p>
-              <p>스킬1: {enemyDetail.skil1}</p>
-              <p>스킬2: {enemyDetail.skil2}</p>
-              <p>스킬3: {enemyDetail.skil3}</p>
-              <p>스킬4: {enemyDetail.skil4}</p>
+              {enemySkills.map(
+                (sk, idx) =>
+                  sk &&
+                  enemyDetail[sk] && (
+                    <div
+                      key={sk}
+                      style={{
+                        marginBottom: 6,
+                        background: "#fee",
+                        borderRadius: 5,
+                        padding: "2px 10px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      스킬{sk.replace("skil", "")}: {enemyDetail[sk]}
+                    </div>
+                  )
+              )}
             </>
           )}
         </div>
       </div>
-
       {/* 전투 결과 중계 */}
       <div
         style={{

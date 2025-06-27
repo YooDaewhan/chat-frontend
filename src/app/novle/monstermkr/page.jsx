@@ -49,7 +49,7 @@ export default function MonsterMakerPage() {
 
       if (res.ok) {
         setMessage("몬스터 생성 성공!");
-        router.push("/noble");
+        router.push("/novle");
       } else {
         setMessage(`오류: ${data.error}`);
       }
