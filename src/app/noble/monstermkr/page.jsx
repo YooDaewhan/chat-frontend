@@ -8,9 +8,13 @@ export default function MonsterMakerPage() {
     name: "",
     kind: "",
     info: "",
+    skil1name: "",
     skil1: "",
+    skil2name: "",
     skil2: "",
+    skil3name: "",
     skil3: "",
+    skil4name: "",
     skil4: "",
   });
   const [message, setMessage] = useState("");
@@ -61,18 +65,28 @@ export default function MonsterMakerPage() {
         onSubmit={handleSubmit}
         style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
       >
-        {["name", "kind", "info", "skil1", "skil2", "skil3", "skil4"].map(
-          (field) => (
-            <input
-              key={field}
-              name={field}
-              placeholder={field}
-              value={form[field]}
-              onChange={handleChange}
-              required
-            />
-          )
-        )}
+        {[
+          "name",
+          "kind",
+          "info",
+          "skil1name",
+          "skil1",
+          "skil2name",
+          "skil2",
+          "skil3name",
+          "skil3",
+          "skil4name",
+          "skil4",
+        ].map((field) => (
+          <input
+            key={field}
+            name={field}
+            placeholder={field}
+            value={form[field]}
+            onChange={handleChange}
+            required
+          />
+        ))}
         <button
           type="submit"
           style={{

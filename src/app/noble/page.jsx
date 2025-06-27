@@ -176,7 +176,17 @@ export default function NoblePage() {
             <p>UID: {selectedEnemy.uid}</p>
             <p>Name: {selectedEnemy.name}</p>
             <p>mid: {selectedEnemy.mid}</p>
+            <p>종족: {selectedEnemy.kind}</p>
+            <p>소개: {selectedEnemy.info}</p>
+            <p>스킬1: {selectedEnemy.skil1}선택</p>
+            <p>스킬2: {selectedEnemy.skil2}선택</p>
+            <p>스킬3: {selectedEnemy.skil3}선택</p>
+            <p>스킬4: {selectedEnemy.skil4}선택</p>
           </div>
+        )}
+        {/* VS 표시는 둘 다 있을 때만 */}
+        {selectedMyMonster && selectedEnemy && (
+          <h1 style={{ fontSize: "2rem" }}>VS</h1>
         )}
         {/* 오른쪽 - 내 몬스터 */}
         {selectedMyMonster && (
@@ -185,12 +195,13 @@ export default function NoblePage() {
             <p>UID: {selectedMyMonster.uid}</p>
             <p>Name: {selectedMyMonster.name}</p>
             <p>mid: {selectedMyMonster.mid}</p>
+            <p>종족: {selectedMyMonster.kind}</p>
+            <p>소개: {selectedMyMonster.info}</p>
+            <p>스킬1: {selectedMyMonster.skil1}선택</p>
+            <p>스킬2: {selectedMyMonster.skil2}선택</p>
+            <p>스킬3: {selectedMyMonster.skil3}선택</p>
+            <p>스킬4: {selectedMyMonster.skil4}선택</p>
           </div>
-        )}
-
-        {/* VS 표시는 둘 다 있을 때만 */}
-        {selectedMyMonster && selectedEnemy && (
-          <h1 style={{ fontSize: "2rem" }}>VS</h1>
         )}
 
         {/* 아무것도 없으면 안내 */}
